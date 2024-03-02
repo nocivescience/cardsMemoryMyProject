@@ -12,6 +12,7 @@ const addContainer = document.getElementById('add-container');
 
 // Keep track of current card
 let currentActiveCard = 0;
+let editCardId = null; // Edit card id
 
 // Store DOM cards
 const cardsEl = [];
@@ -36,13 +37,20 @@ const cardsData = getCardsData();
 
 // Create all cards
 function createCards() {
-  cardsData.forEach((data, index) => createCard(data, index));
+  cardsData.forEach((data, index) => {
+    createCard(data, index)
+    if (index===activeCard){
+      cardsEl[index].className= 'card active'
+    }
+  });
 }
 
 // Create a single card in DOM
 function createCard(data, index) {
   const card = document.createElement('div');
   card.classList.add('card');
+
+  card.dataset.cardIndex = index;
 
   if (index === 0) {
     card.classList.add('active');
@@ -63,7 +71,12 @@ function createCard(data, index) {
 </div>
   `;
 
-  card.addEventListener('click', () => card.classList.toggle('show-answer'));
+  card.addEventListener('click', () => {
+    card.classList.toggle('show-answer');
+    editCardId = card.dataset.cardIndex;
+    questionEl.value = data.question;
+    answerEl.value = data.answer;
+  });
 
   // Add to DOM cards
   cardsEl.push(card);
@@ -90,6 +103,13 @@ function setCardsData(cards) {
   window.location.reload();
 }
 
+function getActiveCard(){
+  const card = localStorage.getItem('activeCard');
+  return card === null ? 0 : Number(card);
+}
+
+let activeCard = getActiveCard();
+
 createCards();
 
 // Event listeners
@@ -107,6 +127,8 @@ nextBtn.addEventListener('click', () => {
   cardsEl[currentActiveCard].className = 'card active';
 
   updateCurrentText();
+
+  localStorage.setItem('activeCard', activeCard)
 });
 
 // Prev button
@@ -120,6 +142,8 @@ prevBtn.addEventListener('click', () => {
   }
 
   cardsEl[currentActiveCard].className = 'card active';
+
+  localStorage.setItem('activeCard', activeCard);
 
   updateCurrentText();
 });
@@ -135,17 +159,38 @@ addCardBtn.addEventListener('click', () => {
   const answer = answerEl.value;
 
   if (question.trim() && answer.trim()) {
-    const newCard = { question, answer };
+    
+    const doesExist = cardsData.some((card) => card.question === question);
+    
+    if(editCardId === null){
+      const newCard = { question, answer };
+      createCard(newCard);
+      questionEl.value = '';
+      answerEl.value = '';
+      addContainer.classList.remove('show');
+      cardsData.push(newCard);
+      setCardsData(cardsData);
+    }else{
+      cardsData[editCardId] = { question, answer };
+      setCardsData(cardsData);
+    }
 
-    createCard(newCard);
-
-    questionEl.value = '';
-    answerEl.value = '';
-
-    addContainer.classList.remove('show');
-
-    cardsData.push(newCard);
-    setCardsData(cardsData);
+    if (doesExist) {
+      alert('Card already exists');
+      return;
+    }else{
+      const newCard = { question, answer };
+      
+      createCard(newCard);
+  
+      questionEl.value = '';
+      answerEl.value = '';
+  
+      addContainer.classList.remove('show');
+  
+      cardsData.push(newCard);
+      setCardsData(cardsData);
+    }
   }
 });
 

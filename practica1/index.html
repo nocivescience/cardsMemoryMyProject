@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body{
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #tasks-container {
+            list-style-type: none;
+            padding: 0;
+            display: grid;
+            width: 100%;
+            height: 500px;
+            display: block;
+        }
+
+        #tasks-container li {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            animation: opacidad 2s;
+        }
+        @keyframes opacidad {
+            0% {opacity: 0;}
+            100% {opacity: 1;}
+        }
+
+        @media (min-width: 768px) and (portrait) {
+            body {
+                background-color: red;
+            }
+            #tasks-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 768px) and (landscape) {
+            #tasks-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .task{
+            background-color: rgb(0, 195, 0);
+        }
+
+        .task.danger{
+            background-color: red;
+        }
+
+        #tasks-container button {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div>
+            <input id="task-input" type="text" placeholder="New task">
+            <button id="add-task-btn">Add Task</button>
+        </div>
+        <div>
+            <ul id="tasks-container"></ul>
+            <button id="clear-btn">Clear Tasks</button>
+            <button id="sort">Ordenar</button>
+            <div>
+                <label for="busqueda">Búsqueda</label>
+                <input type="text" id="busqueda">
+            </div>
+        </div>
+    </div>
+    <script>
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const tasksContainer = document.getElementById('tasks-container');
+        const clearBtn = document.getElementById('clear-btn');
+        const sortBtn = document.getElementById('sort');
+        const busqueda = document.getElementById('busqueda');
+
+        let tasks = getTasksFromLocalStorage();
+
+        function getTasksFromLocalStorage() {
+            const tasks = JSON.parse(localStorage.getItem('tasks'));
+            return tasks === null ? [] : tasks;
+        }
+
+        function searchTasks() {
+            const filter = busqueda.value.toUpperCase();
+            tasksContainer.innerHTML = '';
+            const filteredTasks = tasks.filter(task => task.toUpperCase().includes(filter));
+            filteredTasks.forEach(createTask);
+        };
+
+        busqueda.addEventListener('input', searchTasks);
+
+        function sortTasks() {
+            tasks.sort();
+            setTasksToLocalStorage(tasks);
+            tasksContainer.innerHTML = '';
+            tasks.forEach(createTask);
+        }
+
+        sortBtn.addEventListener('click', sortTasks);
+
+        function setTasksToLocalStorage(tasks) {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function createTask(task) {
+            const li = document.createElement('li');
+            li.classList.add('task');
+            li.textContent = task;
+
+            const deleteBtn = document.createElement('button');
+            const markBtn = document.createElement('button');
+            const fecha = document.createElement('p');
+            fecha.textContent = new Date().toLocaleString();
+            markBtn.textContent = 'Marcar';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', () => {
+                const index = tasks.indexOf(task);
+                tasks.splice(index, 1);
+                setTasksToLocalStorage(tasks);
+                li.remove();
+            });
+            markBtn.addEventListener('click', () => {
+                li.classList.toggle('danger');
+            });
+            
+            li.appendChild(deleteBtn);
+            li.appendChild(markBtn);
+            li.appendChild(fecha);
+            tasksContainer.appendChild(li);
+        }
+
+        tasks.forEach(createTask);
+
+        addTaskBtn.addEventListener('click', () => {
+            let task = taskInput.value;
+            if (task.trim()) {
+                // no numero
+                if(/\d/.test(task)|| !/^[a-zA-Z]+$/.test(task)){
+                    alert('No es un numero');
+                }
+                task=task.toUpperCase();
+                tasks.push(task);
+                setTasksToLocalStorage(tasks);
+                createTask(task);
+                taskInput.value = '';
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            localStorage.clear();
+            tasksContainer.innerHTML = '';
+            console.log('Tasks cleared');
+        });
+    </script>
+</body>
+
+</html>

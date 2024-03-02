@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <input id="note-input" type="text" placeholder="New note">
+  <button id="add-note-btn">Add Note</button>
+  <ul id="notes-container"></ul>
+
+  <script>
+    const noteInput = document.getElementById('note-input');
+    const addNoteBtn = document.getElementById('add-note-btn');
+    const notesContainer = document.getElementById('notes-container');
+
+    let notes = getNotesFromLocalStorage();
+
+    function getNotesFromLocalStorage() {
+      const notes = JSON.parse(localStorage.getItem('notes'));
+      return notes === null ? [] : notes;
+    }
+
+    function setNotesToLocalStorage(notes) {
+      localStorage.setItem('notes', JSON.stringify(notes));
+    }
+
+    function createNote(note) {
+      const li = document.createElement('li');
+      li.textContent = note;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', () => {
+        const index = notes.indexOf(note);
+        notes.splice(index, 1);
+        setNotesToLocalStorage(notes);
+        li.remove();
+      });
+
+      li.appendChild(deleteBtn);
+      notesContainer.appendChild(li);
+    }
+
+    notes.forEach(createNote);
+
+    addNoteBtn.addEventListener('click', () => {
+      const note = noteInput.value;
+      if (note.trim()) {
+        notes.push(note);
+        setNotesToLocalStorage(notes);
+        createNote(note);
+        noteInput.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
